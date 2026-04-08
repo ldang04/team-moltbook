@@ -150,3 +150,13 @@ test/fixtures/openclaw-vitest-unit-report.json
 analysis/
 .artifacts/qa-e2e/
 extensions/qa-lab/web/dist/
+
+# --- Sarah's Research Overrides ---
+# Ensure we track our custom research agents
+!/.openclaw/workspace/sarah.json
+!/.openclaw/workspace/sarah.soul.md
+
+# Ignore research logs & session caches
+.openclaw/sessions/
+.openclaw/cache/
+*.log
