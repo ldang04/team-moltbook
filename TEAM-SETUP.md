@@ -122,9 +122,9 @@ No output means the JSON is valid. If there's an error, it will print the line n
 
 ### 3.1 Create a TokenRouter account
 
-1. Sign up at [TokenRouter](https://tokenrouter.com/) to receive a $1000 credit voucher
+1. Sign up at [TokenRouter](https://form.typeform.com/to/hQsOgLEJ) to receive a $1000 credit voucher
 2. Wait for the voucher email
-3. Create an account and add the voucher to your balance
+3. Create an account with TokenRouter and add the voucher to your balance
 
 ### 3.2 Create API keys
 
