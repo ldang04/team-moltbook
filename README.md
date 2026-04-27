@@ -1,286 +1,76 @@
-# Team Moltbook — Setup Guide
+# Team Moltbook — Understanding AI Agent Behavior in Social Environments
 
-This guide covers the end-to-end process for connecting to the shared OpenClaw server, creating agents, configuring models, deploying agents to Moltbook, and setting up automated cron jobs.
+**Columbia University — COMS 6156 Software Engineering, Spring 2026**
 
-## Prerequisites
+## Project Overview
 
-- SSH access to the shared Hetzner server (ask the server owner to whitelist your SSH public key)
-- A TokenRouter account with API keys for each model
-- An email address and X (Twitter) account per agent for Moltbook sign-up
+As AI agents increasingly move toward multi-agent environments — places where they communicate, coordinate, and socialize with one another — it becomes important to understand what actually drives their behavior. This project investigates the factors that shape AI agent behavior when placed in social settings.
 
----
+We deployed **13 agents** on [Moltbook](https://moltbook.com/), a social platform built entirely for AI agents (essentially Reddit for AI). Our agents run on the [OpenClaw](https://github.com/openclaw/openclaw) framework, which allows them to scroll the feed, comment, upvote, and create posts completely autonomously. Each agent ran for approximately **400 sessions over one week**, and we collected behavioral and social metrics to evaluate how different configurations influence autonomous social behavior.
 
-## 1. Connect to the Server
+## Research Questions
 
-### Generate an SSH key (if you don't have one)
+We designed three parallel experiments to study four research questions:
 
-```bash
-ssh-keygen -t ed25519 -C "your-email@example.com"
-```
+1. **Personality Specification** — How do variations in an agent's personality (defined in `SOUL.md`) affect its social behavior and engagement patterns?
+2. **Operational Rules & Memory** — How do operational instructions and memory structures (defined in `MEMORY.md`) shape agent behavior?
+3. **Underlying Model** — How does the choice of LLM backbone influence agent behavior given identical configurations?
+4. **Cross-factor Interactions** — How do these factors interact to produce emergent social dynamics?
 
-Send the contents of `~/.ssh/id_ed25519.pub` to the server owner to be added to the allowlist.
+## Repository Structure
 
-### SSH into the server
+This repository is a fork of [OpenClaw](https://github.com/openclaw/openclaw) with our experiment agent configurations added. The key project-specific directories are:
 
-```bash
-ssh openclaw@5.161.209.77
-```
+### Agent Configurations — `agents/`
 
-### Port-forward the OpenClaw UI to your local machine
+All agent workspace files live in [`agents/`](agents/). Each subdirectory contains the configuration files that define an agent's identity, personality, behavior loop, and operational rules.
 
-In a **separate terminal** on your local machine, run:
+| Experiment | Agents | Key Variable |
+|---|---|---|
+| **Personality** | `cartographer`, `connector`, `contrarian`, `explainer`, `lurker`, `mirror`, `oracle`, `specialist` | Custom `SOUL.md` with unique personality + `MEMORY.md` for operational rules |
+| **Model** | `m-opus`, `m-sonnet`, `m-gpt5`, `m-qwen` | Same generic config, different LLM backbone (Claude Opus 4.7, Claude Sonnet 4.6, GPT-5.4, Qwen 3.6 Plus) |
+| **Control** | `control` | Default OpenClaw template SOUL.md, Gemini 2.5 Flash, no `MEMORY.md` |
 
-```bash
-ssh -N -L 18789:127.0.0.1:18789 openclaw@5.161.209.77
-```
+### Key Agent Files
 
-This forwards the OpenClaw web UI to `http://127.0.0.1:18789` on your local browser. Keep this terminal open while you need UI access.
-
----
-
-## 2. Create an OpenClaw Agent
-
-Each agent requires three things on the server:
-1. A **workspace folder** — contains the agent's personality/identity files (SOUL.md, AGENTS.md, etc.)
-2. An **agent directory** — stores runtime state (sessions, auth)
-3. An **entry in `openclaw.json`** — registers the agent with the gateway
-
-### 2.1 Create directories
-
-SSH into the server and run (replacing `my-agent` with your agent's id):
-
-```bash
-mkdir -p /home/node/.openclaw/workspace-my-agent
-mkdir -p /home/node/.openclaw/agents/my-agent/agent
-```
-
-### 2.2 Add workspace files
-
-Option A — **Copy from the control agent** (recommended for experiment agents that should behave identically):
-
-```bash
-cp /home/node/.openclaw/workspace-control/*.md /home/node/.openclaw/workspace-my-agent/
-```
-
-Option B — **Upload from your local repo**:
-
-```bash
-# Run on your local machine:
-scp agents/control/*.md openclaw@5.161.209.77:/home/node/.openclaw/workspace-my-agent/
-```
-
-The key workspace files are:
+Each experiment agent's workspace contains:
 
 | File | Purpose |
 |---|---|
-| `SOUL.md` | Agent personality and behavioral guidelines |
+| `SOUL.md` | Personality and behavioral guidelines — the main independent variable for the personality experiment |
+| `MEMORY.md` | Operational rules and memory structure (personality experiment agents only) |
+| `HEARTBEAT.md` | The behavioral loop: a 12-step checklist the agent executes each session (browse feed, comment, post, upvote, etc.) |
+| `IDENTITY.dev.md` | Agent name, emoji, avatar, and role description |
 | `AGENTS.md` | Session startup instructions and memory rules |
-| `IDENTITY.dev.md` | Agent name, emoji, avatar, role description |
-| `TOOLS.md` / `TOOLS.dev.md` | Notes about available tools |
-| `USER.dev.md` | User profile information |
-| `BOOTSTRAP.md` | First-run ritual (can be deleted after first session) |
-| `HEARTBEAT.md` | Periodic heartbeat task checklist |
+| `TOOLS.md` / `TOOLS.dev.md` | Available tool descriptions |
 | `BOOT.md` | Startup hook instructions |
+| `BOOTSTRAP.md` | First-run ritual |
 
-### 2.3 Register the agent in openclaw.json
+### OpenClaw Framework
 
-Edit the config file on the server:
+The rest of the repository is the OpenClaw framework that powers agent execution. See [`OPENCLAW.md`](OPENCLAW.md) for the full OpenClaw project documentation.
 
-```bash
-nano ~/.openclaw/openclaw.json
-```
+## Reproducing the Experiments
 
-Add an entry to the `agents.list` array:
+Reproducing this work requires access to a server running the OpenClaw gateway, API keys for the LLM providers, and accounts on Moltbook for each agent.
 
-```json
-{
-  "id": "my-agent",
-  "name": "My Agent",
-  "workspace": "/home/node/.openclaw/workspace-my-agent",
-  "agentDir": "/home/node/.openclaw/agents/my-agent/agent",
-  "model": {
-    "primary": "tokenrouter-mymodel/vendor/model-name"
-  }
-}
-```
+### Prerequisites
 
-> **nano basics:** Arrow keys to navigate, type to edit, `Ctrl+O` then `Enter` to save, `Ctrl+X` to exit.
+- A Linux server (or local machine) with **Node 22+**
+- API keys for the target LLM providers (we used [TokenRouter](https://tokenrouter.ai/) for unified access)
+- An email address and X (Twitter) account per agent for Moltbook sign-up
 
-After editing, validate the JSON:
+### High-Level Steps
 
-```bash
-cat ~/.openclaw/openclaw.json | python3 -m json.tool > /dev/null
-```
+1. **Set up the OpenClaw gateway** on a server
+2. **Create agent workspaces** by copying the agent directories from `agents/` to the server
+3. **Register each agent** in the OpenClaw configuration (`openclaw.json`) with its workspace path and model assignment
+4. **Configure LLM providers** with API keys
+5. **Deploy agents to Moltbook** by enrolling each agent through the OpenClaw web UI
+6. **Set up cron jobs** to trigger agent sessions on a recurring schedule (we used every 6 hours)
 
-No output means the JSON is valid. If there's an error, it will print the line number.
+### Detailed Setup Guide
 
-> **Important:** JSON does not allow trailing commas. If you add an entry at the end of an array or object, make sure the *previous* entry has a comma but the *last* entry does not.
+For step-by-step instructions including server access, configuration examples, model setup, Moltbook enrollment, and cron job creation, see:
 
----
-
-## 3. Set Up API Keys (TokenRouter)
-
-### 3.1 Create a TokenRouter account
-
-1. Sign up at [TokenRouter](https://form.typeform.com/to/hQsOgLEJ) to receive a $1000 credit voucher
-2. Wait for the voucher email
-3. Create an account with TokenRouter and add the voucher to your balance
-
-### 3.2 Create API keys
-
-In the TokenRouter dashboard, create one API key per model you want to use. Specify the target model for each key.
-
-### 3.3 Configure providers in openclaw.json
-
-Add a custom provider for each model under the top-level `models.providers` section:
-
-```json
-{
-  "models": {
-    "providers": {
-      "tokenrouter-mymodel": {
-        "baseUrl": "https://api.tokenrouter.com/v1",
-        "apiKey": "your-tokenrouter-api-key",
-        "api": "openai-completions",
-        "models": [
-          {
-            "id": "vendor/model-name",
-            "name": "Human-Readable Model Name",
-            "reasoning": true,
-            "input": ["text", "image"],
-            "contextWindow": 200000,
-            "maxTokens": 32000,
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-Also add the model to the `agents.defaults.models` catalog so OpenClaw recognizes it:
-
-```json
-{
-  "agents": {
-    "defaults": {
-      "models": {
-        "tokenrouter-mymodel/vendor/model-name": {}
-      }
-    }
-  }
-}
-```
-
-### 3.4 Current experiment models
-
-| Provider ID | Model ID | Context Window | Max Tokens |
-|---|---|---|---|
-| `tokenrouter-opus` | `anthropic/claude-opus-4-7` | 200,000 | 32,000 |
-| `tokenrouter-sonnet` | `anthropic/claude-sonnet-4-6` | 200,000 | 16,000 |
-| `tokenrouter-gpt` | `openai/gpt-5.4` | 128,000 | 16,384 |
-| `tokenrouter-qwen` | `qwen/qwen3.6-plus` | 131,072 | 8,192 |
-
-The control agent uses `google/gemini-2.5-flash` via a native Google API key (already configured).
-
-### 3.5 Verify
-
-After saving the config, verify on the server:
-
-```bash
-openclaw models status
-```
-
-All providers should appear in the auth overview without errors.
-
-### 3.6 Test agent responses
-
-```bash
-openclaw agent --agent my-agent --message "What model are you? Reply in one sentence."
-```
-
----
-
-## 4. Deploy Agent to Moltbook
-
-### 4.1 Access the OpenClaw web UI
-
-Make sure you have the SSH port-forward running (see Section 1), then open in your browser:
-
-```
-http://127.0.0.1:18789
-```
-
-### 4.2 Start a chat with your agent
-
-In the OpenClaw web UI, select your agent from the chat dropdown menu.
-
-### 4.3 Enroll on Moltbook
-
-1. Go to [https://moltbook.com/](https://moltbook.com/)
-2. Copy the onboarding prompt displayed on the website
-3. Paste it into the chat with your agent in the OpenClaw UI
-4. The agent will follow the instructions to sign up for Moltbook
-5. Complete email verification and X (Twitter) verification as prompted
-
-> Each agent needs its own unique email address and X account for Moltbook enrollment.
-
----
-
-## 5. Create Cron Jobs
-
-Cron jobs allow agents to post automatically on a schedule.
-
-### 5.1 Via the OpenClaw web UI
-
-1. Open `http://127.0.0.1:18789` in your browser
-2. Navigate to the **Cron Jobs** tab
-3. In the right-side panel, create a new cron job specifying:
-   - **Prompt**: the message/instruction to send to the agent
-   - **Agent**: select which agent should execute the job
-   - **Schedule**: cron expression (e.g. `0 */6 * * *` for every 6 hours)
-
-### 5.2 Via openclaw.json (alternative)
-
-Add a `cron` section to the config:
-
-```json
-{
-  "cron": {
-    "jobs": [
-      {
-        "id": "my-agent-post",
-        "agentId": "my-agent",
-        "schedule": "0 */6 * * *",
-        "prompt": "Write and post a new update on Moltbook."
-      }
-    ]
-  }
-}
-```
-
----
-
-## Quick Reference
-
-| Task | Command / Location |
-|---|---|
-| SSH into server | `ssh openclaw@5.161.209.77` |
-| Port-forward UI | `ssh -N -L 18789:127.0.0.1:18789 openclaw@5.161.209.77` |
-| Edit config | `nano ~/.openclaw/openclaw.json` |
-| Validate JSON | `cat ~/.openclaw/openclaw.json \| python3 -m json.tool > /dev/null` |
-| Check models | `openclaw models status` |
-| Test agent | `openclaw agent --agent <id> --message "Hello"` |
-| OpenClaw UI | `http://127.0.0.1:18789` (with port-forward active) |
-| Moltbook | `https://moltbook.com/` |
-| Backup config | `cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.bak` |
-
----
-
-## Troubleshooting
-
-- **JSON parse error after editing config**: Run the validation command to find the line number. Common issues: trailing commas, mismatched braces, or missing quotes.
-- **Agent not showing in UI**: Check that the agent entry in `agents.list` has valid `id`, `workspace`, and `agentDir` fields, and that those directories exist on the server.
-- **Model auth errors**: Run `openclaw models status` to verify API keys are recognized. Check that the `apiKey` field in `models.providers` is correct and that the model `id` in the `models` array matches what TokenRouter expects.
-- **Port-forward not working**: Ensure the SSH tunnel terminal is still running. If the connection dropped, re-run the `ssh -N -L ...` command.
+**[`TEAM-SETUP.md`](TEAM-SETUP.md)** — Full environment setup and deployment guide
