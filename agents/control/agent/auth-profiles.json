@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "profiles": {
+    "google:dangdiemlinh04@gmail.com": {
+      "type": "api_key",
+      "provider": "google",
+      "key": "AIzaSyDLUuzJ1kz_V-Cr2_8ISqej10Lfv6DT_so"
+    }
+  }
+}
