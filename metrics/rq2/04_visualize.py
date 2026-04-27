@@ -69,7 +69,12 @@ def _f(row: dict[str, Any], key: str) -> float:
 
 
 def _short_label(name: str) -> str:
-    return name.replace("-teammoltbook", "").replace("control1", "control")
+    normalized = name.replace("-teammoltbook", "").replace("control1", "control")
+    return normalized.replace("-", " ").title()
+
+
+def _title_label(text: str) -> str:
+    return (text or "unknown").replace("-", " ").replace("_", " ").title()
 
 
 def _color_for(name: str, default_cycle: list[str], idx: int) -> str:
@@ -97,8 +102,8 @@ def chart_word_count(rows: list[dict[str, Any]]) -> Path:
     ax.bar(xs, means, yerr=stds, color=colors, capsize=4, edgecolor="black", linewidth=0.5)
     ax.set_xticks(xs)
     ax.set_xticklabels(labels, rotation=15, ha="right")
-    ax.set_ylabel("Mean word count per utterance")
-    ax.set_title("Response length by agent (mean ± std)")
+    ax.set_ylabel("Mean Word Count Per Utterance")
+    ax.set_title("Response Length By Agent (Mean ± Std)")
     ax.grid(axis="y", linestyle=":", alpha=0.5)
     fig.tight_layout()
     out = FIGURES / "rq2_word_count.pdf"
@@ -111,9 +116,9 @@ def chart_linguistic_markers(rows: list[dict[str, Any]]) -> Path:
     rows = _ordered_agents(rows)
     labels = [_short_label(r["agent"]) for r in rows]
     metrics = [
-        ("Question freq", "mean_question_frequency"),
-        ("Contradiction ratio", "mean_contradiction_ratio"),
-        ("Hedge ratio", "mean_hedge_ratio"),
+        ("Question Frequency", "mean_question_frequency"),
+        ("Contradiction Ratio", "mean_contradiction_ratio"),
+        ("Hedge Ratio", "mean_hedge_ratio"),
     ]
 
     fig, ax = plt.subplots(figsize=(7.5, 4.2))
@@ -127,8 +132,8 @@ def chart_linguistic_markers(rows: list[dict[str, Any]]) -> Path:
         ax.bar(xs + offset, values, width=width, label=label, edgecolor="black", linewidth=0.4)
     ax.set_xticks(xs)
     ax.set_xticklabels(labels, rotation=15, ha="right")
-    ax.set_ylabel("Mean ratio per utterance")
-    ax.set_title("Linguistic markers by agent")
+    ax.set_ylabel("Mean Ratio Per Utterance")
+    ax.set_title("Linguistic Markers By Agent")
     ax.grid(axis="y", linestyle=":", alpha=0.5)
     ax.legend(loc="upper left", frameon=False)
     fig.tight_layout()
@@ -168,9 +173,9 @@ def chart_mirror_adaptation() -> Path:
     ax.plot([-1, 1], [-1, 1], color="black", linestyle="--", linewidth=0.8, label="y = x")
     ax.set_xlim(-1.05, 1.05)
     ax.set_ylim(-1.05, 1.05)
-    ax.set_xlabel("Parent sentiment (VADER compound)")
-    ax.set_ylabel("Agent comment sentiment")
-    ax.set_title("Tone adaptation: Mirror vs Contrarian")
+    ax.set_xlabel("Parent Sentiment (VADER Compound)")
+    ax.set_ylabel("Agent Comment Sentiment")
+    ax.set_title("Tone Adaptation: Mirror vs Contrarian")
     ax.axhline(0, color="gray", linewidth=0.4)
     ax.axvline(0, color="gray", linewidth=0.4)
     ax.grid(linestyle=":", alpha=0.5)
@@ -237,7 +242,7 @@ def chart_radar(rows: list[dict[str, Any]]) -> Path:
     ax.set_yticks([0.25, 0.5, 0.75, 1.0])
     ax.set_yticklabels(["0.25", "0.5", "0.75", "1.0"], fontsize=8)
     ax.set_ylim(0, 1)
-    ax.set_title("Personality fingerprint (min-max normalized)", pad=20)
+    ax.set_title("Personality Fingerprint (Min-Max Normalized)", pad=20)
     ax.legend(loc="upper right", bbox_to_anchor=(1.25, 1.05), frameon=False, fontsize=8)
     fig.tight_layout()
     out = FIGURES / "rq2_radar.pdf"
@@ -280,14 +285,14 @@ def chart_topic_heatmap(rows: list[dict[str, Any]], max_topics: int = 12) -> Pat
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
     im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd")
     ax.set_xticks(np.arange(len(topics)))
-    ax.set_xticklabels(topics, rotation=35, ha="right")
+    ax.set_xticklabels([_title_label(topic) for topic in topics], rotation=35, ha="right")
     ax.set_yticks(np.arange(len(agents)))
     ax.set_yticklabels(agent_labels)
-    ax.set_xlabel("Topic / submolt")
+    ax.set_xlabel("Topic / Submolt")
     ax.set_ylabel("Agent")
-    ax.set_title("Topic engagement heatmap (utterance counts)")
+    ax.set_title("Topic Engagement Heatmap (Utterance Counts)")
     cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label("Utterance count")
+    cbar.set_label("Utterance Count")
 
     # Annotate smaller grids for readability.
     if matrix.size <= 160:
