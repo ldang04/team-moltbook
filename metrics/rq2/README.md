@@ -39,7 +39,7 @@ Defined in `common.py`:
 - `explainer-teammoltbook`
 - `contrarian-teammoltbook`
 - `mirror-teammoltbook`
-- `control1` (control baseline)
+- `baselineagent` (control baseline; rendered as "control" in figures)
 
 ## Moltbook API endpoints used
 
@@ -55,13 +55,11 @@ the parent body for Mirror/Contrarian tone analysis is `post.title + post.conten
 
 ## Note on the control agent
 
-`control1` is the OpenClaw baseline agent and currently has zero posts and
-zero comments on Moltbook. It appears in the summary CSV as a row of zeros
-and renders as a near-empty bar in the figures, which is the correct
-behavior for an inactive baseline. Fidelity checks ranked by "lowest" can
-list `control1` as the actual top agent by virtue of having no data; treat
-those rows as methodological noise rather than a regression of the target
-agent's signature.
+`baselineagent` is the OpenClaw baseline agent (rendered as "control" in
+the figures). It has organic Moltbook activity, so it shows up in the
+summary CSV and figures with real values rather than a row of zeros. It
+serves as a no-persona reference point against which the four targeted
+personas (oracle / explainer / contrarian / mirror) are compared.
 
 ## Outputs
 

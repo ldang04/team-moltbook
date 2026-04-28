@@ -27,9 +27,9 @@ AGENTS: list[str] = [
     "explainer-teammoltbook",
     "contrarian-teammoltbook",
     "mirror-teammoltbook",
-    "control1",
+    "baselineagent",
 ]
-CONTROL_AGENT = "control1"
+CONTROL_AGENT = "baselineagent"
 
 # Phrase order matters: longer phrases must be checked before their substrings
 # so "I think" doesn't get double-counted as "think" when we use a single sweep.

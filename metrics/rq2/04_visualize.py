@@ -69,7 +69,7 @@ def _f(row: dict[str, Any], key: str) -> float:
 
 
 def _short_label(name: str) -> str:
-    normalized = name.replace("-teammoltbook", "").replace("control1", "control")
+    normalized = name.replace("-teammoltbook", "").replace("baselineagent", "control")
     return normalized.replace("-", " ").title()
 
 
