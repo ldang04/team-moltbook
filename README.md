@@ -2,6 +2,8 @@
 
 **Columbia University — COMS 6156 Software Engineering, Spring 2026**
 
+Authors: Sarah Wilson, Diem Linh Dang, Usman Ali Moazzam, Shan Ye
+
 ## Project Overview
 
 As AI agents increasingly move toward multi-agent environments — places where they communicate, coordinate, and socialize with one another — it becomes important to understand what actually drives their behavior. This project investigates the factors that shape AI agent behavior when placed in social settings.
@@ -13,9 +15,52 @@ We deployed **13 agents** on [Moltbook](https://moltbook.com/), a social platfor
 We designed three parallel experiments to study four research questions:
 
 1. **Personality Specification** — How do variations in an agent's personality (defined in `SOUL.md`) affect its social behavior and engagement patterns?
-2. **Operational Rules & Memory** — How do operational instructions and memory structures (defined in `MEMORY.md`) shape agent behavior?
+2. **Operational Rules & Memory** — How do operational instructions and memory structures (defined in `AGENTS.md`) shape agent behavior?
 3. **Underlying Model** — How does the choice of LLM backbone influence agent behavior given identical configurations?
 4. **Cross-factor Interactions** — How do these factors interact to produce emergent social dynamics?
+
+## Experiment Design
+
+### Trial 1 — Personality (`SOUL.md`)
+
+Varies personality along two axes — **verbosity** (high vs. low) and **interaction style** (cooperative vs. competitive) — while keeping operational rules and the underlying model constant.
+
+|  | Cooperative | Competitive |
+|---|---|---|
+| **High verbosity** | `explainer` | `contrarian` |
+| **Low verbosity** | `mirror` * | `oracle` |
+
+\* Mirror is the control-adjacent baseline for this trial.
+
+Each agent has a unique `SOUL.md` that encodes its personality and a shared `MEMORY.md` for operational rules.
+
+### Trial 2 — Operational Configuration (`AGENTS.md`)
+
+Varies operational instructions along two axes — **autonomy** (high vs. low) and **memory access** (full vs. none) — while keeping personality and model constant.
+
+|  | Full Memory | No Memory |
+|---|---|---|
+| **High autonomy** | `maverick` | `drifter` |
+| **Low autonomy** | `sentinel` | `ghost` |
+
+These agents share the same personality but differ in the `AGENTS.md` rules that govern how freely they act and whether they can read/write persistent memory files.
+
+### Trial 3 — Underlying Model
+
+Uses the control agent's configuration (default `SOUL.md`, no custom memory) across four different LLM backbones to isolate the effect of the model itself.
+
+| Agent | Model |
+|---|---|
+| `m-opus` | Claude Opus 4.7 |
+| `m-sonnet` | Claude Sonnet 4.6 |
+| `m-gpt4o` | GPT-5.4 * |
+| `m-qwen` | Qwen 3.6 Plus |
+
+\* Named `m-gpt4o` because GPT-4o was unavailable on TokenRouter at experiment time; this agent runs GPT-5.4.
+
+### Control Agent
+
+The `control` agent uses the default OpenClaw template `SOUL.md`, Gemini 2.5 Flash, and no custom memory or operational overrides. It serves as the shared baseline across all three trials.
 
 ## Repository Structure
 
@@ -25,11 +70,12 @@ This repository is a fork of [OpenClaw](https://github.com/openclaw/openclaw) wi
 
 All agent workspace files live in [`agents/`](agents/). Each subdirectory contains the configuration files that define an agent's identity, personality, behavior loop, and operational rules.
 
-| Experiment | Agents | Key Variable |
-|---|---|---|
-| **Personality** | `cartographer`, `connector`, `contrarian`, `explainer`, `lurker`, `mirror`, `oracle`, `specialist` | Custom `SOUL.md` with unique personality + `MEMORY.md` for operational rules |
-| **Model** | `m-opus`, `m-sonnet`, `m-gpt5`, `m-qwen` | Same generic config, different LLM backbone (Claude Opus 4.7, Claude Sonnet 4.6, GPT-5.4, Qwen 3.6 Plus) |
-| **Control** | `control` | Default OpenClaw template SOUL.md, Gemini 2.5 Flash, no `MEMORY.md` |
+### Project Deliverables — `deliverables/`
+
+Course deliverables live in [`deliverables/`](deliverables/):
+
+- **[Project Proposal](deliverables/Team%20Moltbook%20Project%20Proposal.pdf)** — Initial research plan and experiment design
+- **[Project Progress Report](deliverables/Team%20Moltbook%20Project%20Progress%20Report.pdf)** — Final write-up with results and analysis
 
 ### Key Agent Files
 
