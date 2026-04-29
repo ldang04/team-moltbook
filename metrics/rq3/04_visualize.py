@@ -25,7 +25,9 @@ from typing import Any
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.colors as mcolors  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker as mticker  # noqa: E402
 import numpy as np  # noqa: E402
 
 from common import (
@@ -84,6 +86,14 @@ def _color_for(name: str, default_cycle: list[str], idx: int) -> str:
     if name == CONTROL_AGENT:
         return "#888888"
     return default_cycle[idx % len(default_cycle)]
+
+
+def _format_tick_number(value: float, _: float) -> str:
+    if value >= 100:
+        return f"{value:.0f}"
+    if value >= 10:
+        return f"{value:.1f}"
+    return f"{value:.2f}"
 
 
 # ---------------------------------------------------------------------------
@@ -241,7 +251,13 @@ def chart_topic_heatmap(rows: list[dict[str, Any]], max_topics: int = 12) -> Pat
     fig_w = max(7.2, len(topics) * 0.55)
     fig_h = max(3.8, len(agents) * 0.7)
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
-    im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd")
+    positive = matrix[matrix > 0]
+    norm: mcolors.LogNorm | None = None
+    if positive.size:
+        norm = mcolors.LogNorm(vmin=float(positive.min()), vmax=float(positive.max()))
+        im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd", norm=norm)
+    else:
+        im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd")
     ax.set_xticks(np.arange(len(topics)))
     ax.set_xticklabels([_title_label(topic) for topic in topics], rotation=35, ha="right")
     ax.set_yticks(np.arange(len(agents)))
@@ -250,7 +266,15 @@ def chart_topic_heatmap(rows: list[dict[str, Any]], max_topics: int = 12) -> Pat
     ax.set_ylabel("Agent")
     ax.set_title("Topic Engagement Heatmap (Utterance Counts)")
     cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label("Utterance Count")
+    cbar.set_label("Utterance Count (log scale)")
+    if norm is not None:
+        ticks = np.geomspace(norm.vmin, norm.vmax, num=7)
+        cbar.set_ticks(ticks)
+        cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_format_tick_number))
+    else:
+        vmax = float(matrix.max()) if matrix.max() > 0 else 1.0
+        cbar.set_ticks(np.linspace(0.0, vmax, num=7))
+        cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_format_tick_number))
 
     # Annotate smaller grids for readability.
     if matrix.size <= 160:
@@ -258,10 +282,23 @@ def chart_topic_heatmap(rows: list[dict[str, Any]], max_topics: int = 12) -> Pat
         for i in range(matrix.shape[0]):
             for j in range(matrix.shape[1]):
                 value = int(matrix[i, j])
-                text_color = "white" if matrix[i, j] > (0.55 * vmax) else "black"
+                if norm is not None and value > 0:
+                    intensity = float(norm(matrix[i, j]))
+                    text_color = "white" if intensity > 0.55 else "black"
+                else:
+                    text_color = "white" if matrix[i, j] > (0.55 * vmax) else "black"
                 ax.text(j, i, f"{value}", ha="center", va="center", color=text_color, fontsize=8)
 
-    fig.tight_layout()
+    fig.text(
+        0.5,
+        0.01,
+        "* Color scale uses log-scaled utterance counts to make small differences more visible.",
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        color="#444444",
+    )
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
     out = FIGURES / "rq3_topic_heatmap.pdf"
     fig.savefig(out)
     plt.close(fig)

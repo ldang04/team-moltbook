@@ -23,7 +23,9 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.colors as mcolors  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker as mticker  # noqa: E402
 import numpy as np  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent
@@ -176,13 +178,23 @@ def _section_breaks() -> list[int]:
     return breaks
 
 
+def _format_tick_number(value: float, _: float) -> str:
+    return f"{value:.2f}"
+
+
 def render_heatmap(values: np.ndarray, out_path: Path) -> None:
     n_rows, n_cols = values.shape
     fig_w = 1.6 * n_cols + 3.2     # extra width for left-margin section labels
     fig_h = 0.55 * n_rows + 2.4
     fig, ax = plt.subplots(figsize=(fig_w, fig_h))
 
-    im = ax.imshow(values, cmap="viridis", aspect="auto", vmin=0.0, vmax=1.0)
+    positive = values[values > 0]
+    norm: mcolors.LogNorm | None = None
+    if positive.size:
+        norm = mcolors.LogNorm(vmin=float(positive.min()), vmax=float(values.max()))
+        im = ax.imshow(values, cmap="viridis", aspect="auto", norm=norm)
+    else:
+        im = ax.imshow(values, cmap="viridis", aspect="auto", vmin=0.0, vmax=1.0)
 
     ax.set_xticks(np.arange(n_cols))
     ax.set_xticklabels(
@@ -200,7 +212,11 @@ def render_heatmap(values: np.ndarray, out_path: Path) -> None:
     for i in range(n_rows):
         for j in range(n_cols):
             v = float(values[i, j])
-            color = "white" if v < 0.55 else "black"
+            if norm is not None and v > 0:
+                intensity = float(norm(v))
+                color = "white" if intensity < 0.55 else "black"
+            else:
+                color = "white" if v < 0.55 else "black"
             ax.text(j, i, f"{v:.2f}", ha="center", va="center", color=color, fontsize=8)
 
     # Section dividers between groups (white lines on top of the colormap).
@@ -226,7 +242,14 @@ def render_heatmap(values: np.ndarray, out_path: Path) -> None:
         )
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.035, pad=0.02)
-    cbar.set_label("Normalized score (0 = lowest, 1 = highest)", fontsize=9)
+    cbar.set_label("Normalized score (log color scale)", fontsize=9)
+    if norm is not None:
+        ticks = np.geomspace(norm.vmin, norm.vmax, num=8)
+        cbar.set_ticks(ticks)
+        cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_format_tick_number))
+    else:
+        cbar.set_ticks(np.linspace(0.0, 1.0, num=8))
+        cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_format_tick_number))
     cbar.ax.tick_params(labelsize=8)
 
     # Stack the title and italic subtitle as figure-level text so they sit
@@ -247,10 +270,19 @@ def render_heatmap(values: np.ndarray, out_path: Path) -> None:
         style="italic",
         color="#444444",
     )
+    fig.text(
+        0.5,
+        0.03,
+        "* Color scale uses log-scaled values to make small differences more visible.",
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        color="#444444",
+    )
 
     # Make room for the left-margin section labels, rotated x-tick text, and
     # the two-line title block above the heatmap.
-    fig.subplots_adjust(left=0.22, right=0.94, top=0.86, bottom=0.18)
+    fig.subplots_adjust(left=0.22, right=0.94, top=0.86, bottom=0.20)
     fig.savefig(out_path)
     plt.close(fig)
 
