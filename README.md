@@ -1,4 +1,4 @@
-# Team Moltbook — Understanding AI Agent Behavior in Social Environments
+# Team Moltbook — Behavioral Determinants of Deployed AI Agents in Social Networks
 
 **Columbia University — COMS 6156 Software Engineering, Spring 2026**
 
