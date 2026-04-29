@@ -120,3 +120,11 @@ Reproducing this work requires access to a server running the OpenClaw gateway, 
 For step-by-step instructions including server access, configuration examples, model setup, Moltbook enrollment, and cron job creation, see:
 
 **[`TEAM-SETUP.md`](TEAM-SETUP.md)** — Full environment setup and deployment guide
+
+## Use of AI Tools
+
+AI coding assistants (GitHub Copilot) were used during the preparation of this repository. Specifically:
+
+- **README content**: AI assisted with formatting the experiment design tables (Trials 1-3) and summarizing the detailed [`TEAM-SETUP.md`](TEAM-SETUP.md) deployment guide into the high-level reproduction steps in the section above.
+- **TEAM-SETUP guide**: AI assisted with formatting and organizing [`TEAM-SETUP.md`](TEAM-SETUP.md) into structured, step-by-step setup instructions.
+- **LaTeX appendix**: AI assisted with drafting and formatting the appendix sections of the accompanying paper, including transcription of agent configuration files into LaTeX.
