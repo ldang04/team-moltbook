@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Build the unified 13-agent x 6-metric behavioral heatmap.
+"""Build the unified 13-agent OpenClaw charts.
 
 Reads:  ../rq{2,3,4}/data/analysis/agent_summary.csv (cached aggregates)
         ../rq{2,3,4}/data/features/<username>_features.json (for topic breadth)
-Writes: figures/overall_heatmap.pdf
+Writes:
+  figures/overall_heatmap.pdf
+  figures/overall_topic_heatmap.pdf
+  figures/overall_word_count.pdf
+  figures/overall_linguistic_markers.pdf
 
 Min-max normalization is applied per metric column across all 13 agents in a
 single unified pool (not per-cohort). This intentionally differs from the
@@ -15,6 +19,7 @@ one-to-one.
 from __future__ import annotations
 
 import csv
+from collections import Counter
 import json
 import sys
 from dataclasses import dataclass
@@ -182,6 +187,16 @@ def _format_tick_number(value: float, _: float) -> str:
     return f"{value:.2f}"
 
 
+def _format_count_tick_number(value: float, _: float) -> str:
+    # Ticks come from geometric spacing over integer counts; round so
+    # colorbars show clean integer labels.
+    return f"{int(round(value))}"
+
+
+def _title_label(text: str) -> str:
+    return (text or "unknown").replace("-", " ").replace("_", " ").title()
+
+
 def render_heatmap(values: np.ndarray, out_path: Path) -> None:
     n_rows, n_cols = values.shape
     fig_w = 1.6 * n_cols + 3.2     # extra width for left-margin section labels
@@ -287,6 +302,188 @@ def render_heatmap(values: np.ndarray, out_path: Path) -> None:
     plt.close(fig)
 
 
+def render_topic_heatmap(max_topics: int = 12) -> Path:
+    """Heatmap of topic/submolt utterance counts by agent (log color scale)."""
+    counts_by_agent: dict[str, Counter[str]] = {}
+    global_counts: Counter[str] = Counter()
+
+    for agent in AGENTS:
+        features_path = (
+            METRICS_ROOT
+            / agent.source_rq
+            / "data"
+            / "features"
+            / f"{agent.username}_features.json"
+        )
+        agent_counts: Counter[str] = Counter()
+        if features_path.exists():
+            payload = json.loads(features_path.read_text())
+            for utterance in payload.get("utterances", []):
+                topic_raw = utterance.get("submolt") or "unknown"
+                topic = topic_raw if isinstance(topic_raw, str) else "unknown"
+                topic = topic.strip() if topic else "unknown"
+                agent_counts[topic] += 1
+                global_counts[topic] += 1
+        counts_by_agent[agent.username] = agent_counts
+
+    topics = [topic for topic, _ in global_counts.most_common(max_topics)]
+    if not topics:
+        topics = ["unknown"]
+
+    agent_usernames = [a.username for a in AGENTS]
+    matrix = np.array(
+        [[counts_by_agent[a].get(topic, 0) for topic in topics] for a in agent_usernames],
+        dtype=float,
+    )
+
+    fig_w = max(7.2, len(topics) * 0.55)
+    fig_h = max(3.8, len(agent_usernames) * 0.7)
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+
+    positive = matrix[matrix > 0]
+    norm: mcolors.LogNorm | None = None
+    if positive.size:
+        norm = mcolors.LogNorm(vmin=float(positive.min()), vmax=float(positive.max()))
+        im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd", norm=norm)
+    else:
+        im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd")
+
+    ax.set_xticks(np.arange(len(topics)))
+    ax.set_xticklabels([_title_label(topic) for topic in topics], rotation=35, ha="right")
+    ax.set_yticks(np.arange(len(agent_usernames)))
+    ax.set_yticklabels([a.label for a in AGENTS])
+    ax.set_xlabel("Topic / Submolt")
+    ax.set_ylabel("Agent")
+    ax.set_title("Topic Engagement Heatmap (Utterance Counts)")
+
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label("Utterance Count (log scale)")
+    if norm is not None:
+        ticks = np.geomspace(norm.vmin, norm.vmax, num=8)
+        cbar.set_ticks(ticks)
+        cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_format_count_tick_number))
+    else:
+        vmax = float(matrix.max()) if matrix.max() > 0 else 1.0
+        cbar.set_ticks(np.linspace(0.0, vmax, num=8))
+        cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(_format_count_tick_number))
+
+    # Annotate smaller grids for readability.
+    if matrix.size <= 160:
+        vmax = float(matrix.max()) if matrix.max() > 0 else 1.0
+        for i in range(matrix.shape[0]):
+            for j in range(matrix.shape[1]):
+                value = int(matrix[i, j])
+                if norm is not None and value > 0:
+                    intensity = float(norm(matrix[i, j]))
+                    text_color = "white" if intensity > 0.55 else "black"
+                else:
+                    text_color = "white" if matrix[i, j] > (0.55 * vmax) else "black"
+                ax.text(
+                    j,
+                    i,
+                    f"{value}",
+                    ha="center",
+                    va="center",
+                    color=text_color,
+                    fontsize=8,
+                )
+
+    fig.text(
+        0.5,
+        0.01,
+        "* Color scale uses log-scaled utterance counts to make small differences more visible.",
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        color="#444444",
+    )
+
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    out = FIGURES / "overall_topic_heatmap.pdf"
+    fig.savefig(out)
+    plt.close(fig)
+    return out
+
+
+def render_word_count_chart() -> Path:
+    """Bar chart of mean word count per utterance, across all 13 agents."""
+    xs = np.arange(len(AGENTS))
+    labels = [a.label for a in AGENTS]
+    means: list[float] = []
+    stds: list[float] = []
+
+    for agent in AGENTS:
+        row = _load_summary_row(agent.source_rq, agent.username)
+        means.append(_safe_float(row.get("mean_word_count")))
+        stds.append(_safe_float(row.get("std_word_count")))
+
+    cycle = plt.rcParams["axes.prop_cycle"].by_key().get(
+        "color", ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
+    )
+    colors = [cycle[i % len(cycle)] for i in range(len(AGENTS))]
+
+    fig, ax = plt.subplots(figsize=(10.5, 4.7))
+    ax.bar(xs, means, yerr=stds, color=colors, capsize=4, edgecolor="black", linewidth=0.5)
+    ax.set_xticks(xs)
+    ax.set_xticklabels(labels, rotation=20, ha="right")
+    ax.set_ylabel("Mean Word Count Per Utterance")
+    ax.set_title("Response Length By Agent (Mean ± Std)")
+    ax.grid(axis="y", linestyle=":", alpha=0.5)
+    fig.tight_layout()
+    out = FIGURES / "overall_word_count.pdf"
+    fig.savefig(out)
+    plt.close(fig)
+    return out
+
+
+def render_linguistic_markers_chart() -> Path:
+    """Grouped bar chart of the three core linguistic marker metrics."""
+    metrics: list[tuple[str, str]] = [
+        ("Questions", "mean_question_frequency"),
+        ("Contradiction Ratio", "mean_contradiction_ratio"),
+        ("Hedge Ratio", "mean_hedge_ratio"),
+    ]
+
+    xs = np.arange(len(AGENTS))
+    labels = [a.label for a in AGENTS]
+
+    fig, ax = plt.subplots(figsize=(12.2, 5.0))
+    n_metrics = len(metrics)
+    width = 0.8 / n_metrics
+    cycle = plt.rcParams["axes.prop_cycle"].by_key().get(
+        "color", ["C0", "C1", "C2", "C3", "C4", "C5"]
+    )
+
+    for i, (label, key) in enumerate(metrics):
+        offset = (i - (n_metrics - 1) / 2) * width
+        values: list[float] = []
+        for agent in AGENTS:
+            row = _load_summary_row(agent.source_rq, agent.username)
+            values.append(_safe_float(row.get(key)))
+        ax.bar(
+            xs + offset,
+            values,
+            width=width,
+            label=label,
+            edgecolor="black",
+            linewidth=0.4,
+            color=cycle[i % len(cycle)],
+        )
+
+    ax.set_xticks(xs)
+    ax.set_xticklabels(labels, rotation=20, ha="right")
+    ax.set_ylabel("Mean Ratio Per Utterance")
+    ax.set_title("Linguistic Markers By Agent")
+    ax.grid(axis="y", linestyle=":", alpha=0.5)
+    ax.legend(loc="upper left", frameon=False)
+    fig.tight_layout()
+
+    out = FIGURES / "overall_linguistic_markers.pdf"
+    fig.savefig(out)
+    plt.close(fig)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -309,6 +506,15 @@ def main() -> int:
     out = FIGURES / "overall_heatmap.pdf"
     render_heatmap(final, out)
     log(f"wrote {out}")
+
+    out_topic = render_topic_heatmap()
+    log(f"wrote {out_topic}")
+
+    out_word = render_word_count_chart()
+    log(f"wrote {out_word}")
+
+    out_markers = render_linguistic_markers_chart()
+    log(f"wrote {out_markers}")
     return 0
 
 

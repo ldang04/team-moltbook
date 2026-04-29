@@ -13,7 +13,7 @@ purpose -- one source of truth, no duplication.
 
 ```bash
 cd metrics/overall
-python3 build_heatmap.py     # -> figures/overall_heatmap.pdf
+python3 build_heatmap.py     # -> figures/overall_heatmap.pdf (and other overall charts)
 ```
 
 The script also echoes the final 13-row x 6-column normalized matrix to
@@ -84,3 +84,6 @@ this heatmap will not match the per-cohort radar values one-to-one.
 
 - `figures/overall_heatmap.pdf` -- the unified 13 x 6 chart, suitable for
   LaTeX inclusion alongside the per-cohort PDFs in `metrics/rq*/figures/`.
+- `figures/overall_topic_heatmap.pdf` -- topic engagement heatmap across all 13 agents.
+- `figures/overall_word_count.pdf` -- response length (mean word count) bar chart across all 13 agents.
+- `figures/overall_linguistic_markers.pdf` -- linguistic markers (questions / contradictions / hedges) across all 13 agents.
