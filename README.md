@@ -1,4 +1,4 @@
-# Team Moltbook — Understanding AI Agent Behavior in Social Environments
+# Team Moltbook — Behavioral Determinants of Deployed AI Agents in Social Networks
 
 **Columbia University — COMS 6156 Software Engineering, Spring 2026**
 
@@ -14,40 +14,42 @@ We deployed **13 agents** on [Moltbook](https://moltbook.com/), a social platfor
 
 We designed three parallel experiments to study four research questions:
 
-1. **Personality Specification** — How do variations in an agent's personality (defined in `SOUL.md`) affect its social behavior and engagement patterns?
-2. **Operational Rules & Memory** — How do operational instructions and memory structures (defined in `AGENTS.md`) shape agent behavior?
-3. **Underlying Model** — How does the choice of LLM backbone influence agent behavior given identical configurations?
-4. **Cross-factor Interactions** — How do these factors interact to produce emergent social dynamics?
+1. **RQ1 (Baseline Behavior)** — To what extent does a default OpenClaw agent, with no configuration-level interventions, develop stable social behavior on Moltbook?
+2. **RQ2 (Personality Layer)** — To what extent does an agent's `SOUL.md` personality specification predict its actual social behavior, linguistic style, and content choices on Moltbook, across dimensions of information-sharing orientation, continuity, and agreeableness?
+3. **RQ3 (Model Backbone)** — When personality and operational configuration are held constant, how does the choice of underlying LLM affect an agent's social behavior and output quality?
+4. **RQ4 (Operational Rules and Memory)** — How do changes to `AGENTS.md` autonomy settings and memory persistence affect an agent's decision-making patterns, risk tolerance, and social engagement style?
 
 ## Experiment Design
 
-### Trial 1 — Personality (`SOUL.md`)
+### RQ1 — Baseline Behavior
 
-Varies personality along two axes — **verbosity** (high vs. low) and **interaction style** (cooperative vs. competitive) — while keeping operational rules and the underlying model constant.
+The `control` agent uses the default OpenClaw template `SOUL.md`, Gemini 2.5 Flash, and no custom memory or operational overrides. It serves as the shared baseline across all three experiments below, and its behavior is analyzed independently to answer RQ1: whether a default agent develops stable social behavior with no configuration-level interventions.
+
+### RQ2 — Personality Specification (`SOUL.md`)
+
+Four agents are deployed with identical configurations as the control agent, varying only `SOUL.md`. These agents represent maximally distinct behavioral strategies along two theoretically motivated dimensions: **information-sharing orientation** (verbose vs. withholding) and **social orientation** (cooperative vs. competitive), yielding a 2×2 design. Agent selection is grounded in social media behavior dimensions identified by prior work (Stieglitz and Dang-Xuan 2013; Huang et al. 2025).
 
 |  | Cooperative | Competitive |
 |---|---|---|
-| **High verbosity** | `explainer` | `contrarian` |
-| **Low verbosity** | `mirror` * | `oracle` |
+| **Verbose** (high information density) | `explainer` | `contrarian` |
+| **Withholding** (low information density) | `mirror` | `oracle` |
 
-\* Mirror is the control-adjacent baseline for this trial.
+Each agent maps to an approximate Big Five (OCEAN) profile and Myers-Briggs type:
 
-Each agent has a unique `SOUL.md` that encodes its personality and a shared `MEMORY.md` for operational rules.
+| Agent | MBTI | O | C | E | A | N |
+|---|---|---|---|---|---|---|
+| Oracle | INTJ | High | High | Low | Low | Low |
+| Explainer | ENFJ | High | High | High | High | Low |
+| Contrarian | ENTJ | High | Med | High | Low | Low |
+| Mirror | ISFJ | Med | Med | High | High | Low |
 
-### Trial 2 — Operational Configuration (`AGENTS.md`)
+Neuroticism is held low for all agents by design, since high-neuroticism agents may produce erratic behavior that confounds personality-driven effects with instability artifacts.
 
-Varies operational instructions along two axes — **autonomy** (high vs. low) and **memory access** (full vs. none) — while keeping personality and model constant.
+Each agent's `SOUL.md` specifies four structured fields: Core Truths (foundational values), Boundaries (explicit behavioral constraints), Vibe (tone and register), and Continuity (posting cadence and interactivity norms). All four share the same `AGENTS.md`, model (Gemini 2.5 Flash), and `HEARTBEAT.md`.
 
-|  | Full Memory | No Memory |
-|---|---|---|
-| **High autonomy** | `maverick` | `drifter` |
-| **Low autonomy** | `sentinel` | `ghost` |
+### RQ3 — Model Backbone
 
-These agents share the same personality but differ in the `AGENTS.md` rules that govern how freely they act and whether they can read/write persistent memory files.
-
-### Trial 3 — Underlying Model
-
-Uses the control agent's configuration (default `SOUL.md`, no custom memory) across four different LLM backbones to isolate the effect of the model itself.
+Four agents are deployed with identical configurations as the control agent, varying only the underlying LLM. Conditions include `anthropic/claude-4-7-opus`, `anthropic/claude-4-6-sonnet`, `openai/gpt-5-4`, and `alibaba/qwen-3-6plus`.
 
 | Agent | Model |
 |---|---|
@@ -58,9 +60,20 @@ Uses the control agent's configuration (default `SOUL.md`, no custom memory) acr
 
 \* Named `m-gpt4o` because GPT-4o was unavailable on TokenRouter at experiment time; this agent runs GPT-5.4.
 
-### Control Agent
+This design allows for a controlled comparison between two generations of Anthropic models to assess intra-provider scaling effects, as well as a cross-cultural performance analysis between Western-developed frontier models and non-Western counterparts like Qwen. By including both inference-optimized models (e.g., Gemini 2.5 Flash) and large-scale frontier models (e.g., Opus 4.7), we observe how behavioral fidelity to `SOUL.md` scales with parameter density, identifying whether "personality drift" is more prevalent in resource-constrained architectures.
 
-The `control` agent uses the default OpenClaw template `SOUL.md`, Gemini 2.5 Flash, and no custom memory or operational overrides. It serves as the shared baseline across all three trials.
+### RQ4 — Operational Rules, Memory, and Risk Posture (`AGENTS.md`)
+
+Four agents are deployed with identical configurations as the control agent, varying only `AGENTS.md`. The default `AGENTS.md` template was modified at the end by adding condition-specific rules for each agent to follow.
+
+The design incorporates two variables: **autonomy** and **memory persistence**. High-autonomy agents are allowed and encouraged to act on their own discretion, whereas low-autonomy agents are forced to internally verify and confirm their actions against their internal checks and criteria — only after passing accuracy, safety, and validity checks will low-autonomy agents proceed with an action. The memory dimension varies from persistent long-term memory to no memory. Agents with persistent memory record session logs and context between sessions in a memory file. Agents with no memory have these memory files deleted between sessions and are explicitly instructed to treat each session as a brand new session.
+
+|  | Full Memory | No Memory |
+|---|---|---|
+| **High autonomy** | `maverick` | `drifter` |
+| **Low autonomy** | `sentinel` | `ghost` |
+
+All four share the same `SOUL.md`, model (Gemini 2.5 Flash), and `HEARTBEAT.md`.
 
 ## Repository Structure
 
@@ -76,21 +89,24 @@ Course deliverables live in [`deliverables/`](deliverables/):
 
 - **[Project Proposal](deliverables/Team%20Moltbook%20Project%20Proposal.pdf)** — Initial research plan and experiment design
 - **[Project Progress Report](deliverables/Team%20Moltbook%20Project%20Progress%20Report.pdf)** — Final write-up with results and analysis
+- **[Presentation Slides](deliverables/Team%20Moltbook%20Presentation%20Slides.pdf)** — Slides used for the project demo + elevator pitch for in-class presentation
+- **[Demo Video](https://www.youtube.com/watch?v=37DonHgVvss)** — Recorded project demo on YouTube
 
 ### Key Agent Files
 
 Each experiment agent's workspace contains:
 
-| File | Purpose |
+| File | Role |
 |---|---|
-| `SOUL.md` | Personality and behavioral guidelines — the main independent variable for the personality experiment |
-| `MEMORY.md` | Operational rules and memory structure (personality experiment agents only) |
-| `HEARTBEAT.md` | The behavioral loop: a 12-step checklist the agent executes each session (browse feed, comment, post, upvote, etc.) |
-| `IDENTITY.dev.md` | Agent name, emoji, avatar, and role description |
-| `AGENTS.md` | Session startup instructions and memory rules |
-| `TOOLS.md` / `TOOLS.dev.md` | Available tool descriptions |
-| `BOOT.md` | Startup hook instructions |
-| `BOOTSTRAP.md` | First-run ritual |
+| `SOUL.md` | Personality, values, behavioral style |
+| `AGENTS.md` | Operational rules, trust posture, constraints |
+| `HEARTBEAT.md` | Periodic task checklist, API call sequence |
+| `AGENTS.md` | Operational context, tool guidance |
+| `TOOLS.md` | Skill permissions, API interfaces |
+| `IDENTITY.md` | Agent identity metadata |
+| `USER.md` | Human owner context |
+| `MEMORY.md` | Accumulated experience (initially blank) |
+| `BOOTSTRAP.md` | Session initialization instructions |
 
 ### OpenClaw Framework
 
@@ -125,7 +141,7 @@ For step-by-step instructions including server access, configuration examples, m
 
 AI coding assistants (GitHub Copilot) were used during the preparation of this repository. Specifically:
 
-- **README content**: AI assisted with formatting the experiment design tables (Trials 1-3) and summarizing the detailed [`TEAM-SETUP.md`](TEAM-SETUP.md) deployment guide into the high-level reproduction steps in the section above.
+- **README content**: AI assisted with formatting the experiment design tables (RQs) and summarizing the detailed [`TEAM-SETUP.md`](TEAM-SETUP.md) deployment guide into the high-level reproduction steps in the section above.
 - **TEAM-SETUP guide**: AI assisted with formatting and organizing [`TEAM-SETUP.md`](TEAM-SETUP.md) into structured, step-by-step setup instructions.
 - **LaTeX appendix**: AI assisted with drafting and formatting the appendix sections of the accompanying paper, including transcription of agent configuration files into LaTeX.
 - **Metrics scripts and README files**: AI (Cursor) assisted with writing the scraping scripts used to fetch metrics from Moltbook's API, and with drafting the metrics README files summarizing each analysis pipeline and output artifacts.
