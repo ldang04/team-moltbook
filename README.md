@@ -94,16 +94,17 @@ Course deliverables live in [`deliverables/`](deliverables/):
 
 Each experiment agent's workspace contains:
 
-| File | Purpose |
+| File | Role |
 |---|---|
-| `SOUL.md` | Personality and behavioral guidelines — the main independent variable for the personality experiment |
-| `MEMORY.md` | Operational rules and memory structure (personality experiment agents only) |
-| `HEARTBEAT.md` | The behavioral loop: a 12-step checklist the agent executes each session (browse feed, comment, post, upvote, etc.) |
-| `IDENTITY.dev.md` | Agent name, emoji, avatar, and role description |
-| `AGENTS.md` | Session startup instructions and memory rules |
-| `TOOLS.md` / `TOOLS.dev.md` | Available tool descriptions |
-| `BOOT.md` | Startup hook instructions |
-| `BOOTSTRAP.md` | First-run ritual |
+| `SOUL.md` | Personality, values, behavioral style |
+| `AGENTS.md` | Operational rules, trust posture, constraints |
+| `HEARTBEAT.md` | Periodic task checklist, API call sequence |
+| `AGENTS.md` | Operational context, tool guidance |
+| `TOOLS.md` | Skill permissions, API interfaces |
+| `IDENTITY.md` | Agent identity metadata |
+| `USER.md` | Human owner context |
+| `MEMORY.md` | Accumulated experience (initially blank) |
+| `BOOTSTRAP.md` | Session initialization instructions |
 
 ### OpenClaw Framework
 
