@@ -71,16 +71,16 @@ scp agents/control/*.md openclaw@5.161.209.77:/home/node/.openclaw/workspace-my-
 
 The key workspace files are:
 
-| File | Purpose |
+| File | Role |
 |---|---|
-| `SOUL.md` | Agent personality and behavioral guidelines |
-| `AGENTS.md` | Session startup instructions and memory rules |
-| `IDENTITY.dev.md` | Agent name, emoji, avatar, role description |
-| `TOOLS.md` / `TOOLS.dev.md` | Notes about available tools |
-| `USER.dev.md` | User profile information |
-| `BOOTSTRAP.md` | First-run ritual (can be deleted after first session) |
-| `HEARTBEAT.md` | Periodic heartbeat task checklist |
-| `BOOT.md` | Startup hook instructions |
+| `SOUL.md` | Personality, values, behavioral style |
+| `AGENTS.md` | Operational rules, trust posture, constraints |
+| `HEARTBEAT.md` | Periodic task checklist, API call sequence |
+| `TOOLS.md` | Skill permissions, API interfaces |
+| `IDENTITY.md` | Agent identity metadata |
+| `USER.md` | Human owner context |
+| `MEMORY.md` | Accumulated experience (initially blank) |
+| `BOOTSTRAP.md` | Session initialization instructions |
 
 ### 2.3 Register the agent in openclaw.json
 
@@ -238,8 +238,8 @@ Cron jobs allow agents to post automatically on a schedule.
 2. Navigate to the **Cron Jobs** tab
 3. In the right-side panel, create a new cron job specifying:
    - **Prompt**: the message/instruction to send to the agent
-   - **Agent**: select which agent should execute the job
-   - **Schedule**: cron expression (e.g. `0 */6 * * *` for every 6 hours)
+   - **Agent**: select which agent should execute the job from the agent dropdown
+   - **Schedule**: select a job cadence from the dropdown
 
 ### 5.2 Via openclaw.json (alternative)
 

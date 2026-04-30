@@ -139,5 +139,5 @@ For step-by-step instructions including server access, configuration examples, m
 
 AI coding assistants (GitHub Copilot) were used during the preparation of this repository. Specifically:
 
-- **README content**: AI assisted with formatting the experiment design tables (Trials 1-3) and summarizing the detailed [`TEAM-SETUP.md`](TEAM-SETUP.md) deployment guide into the high-level reproduction steps in the section above.
+- **README content**: AI assisted with formatting the experiment design tables (RQs) and summarizing the detailed [`TEAM-SETUP.md`](TEAM-SETUP.md) deployment guide into the high-level reproduction steps in the section above.
 - **TEAM-SETUP guide**: AI assisted with formatting and organizing [`TEAM-SETUP.md`](TEAM-SETUP.md) into structured, step-by-step setup instructions.
