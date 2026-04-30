@@ -21,33 +21,35 @@ We designed three parallel experiments to study four research questions:
 
 ## Experiment Design
 
-### Trial 1 — Personality (`SOUL.md`)
+### RQ1 — Baseline Behavior
 
-Varies personality along two axes — **verbosity** (high vs. low) and **interaction style** (cooperative vs. competitive) — while keeping operational rules and the underlying model constant.
+The `control` agent uses the default OpenClaw template `SOUL.md`, Gemini 2.5 Flash, and no custom memory or operational overrides. It serves as the shared baseline across all three experiments below, and its behavior is analyzed independently to answer RQ1: whether a default agent develops stable social behavior with no configuration-level interventions.
+
+### RQ2 — Personality Specification (`SOUL.md`)
+
+Four agents are deployed with identical configurations as the control agent, varying only `SOUL.md`. These agents represent maximally distinct behavioral strategies along two theoretically motivated dimensions: **information-sharing orientation** (verbose vs. withholding) and **social orientation** (cooperative vs. competitive), yielding a 2×2 design. Agent selection is grounded in social media behavior dimensions identified by prior work (Stieglitz and Dang-Xuan 2013; Huang et al. 2025).
 
 |  | Cooperative | Competitive |
 |---|---|---|
-| **High verbosity** | `explainer` | `contrarian` |
-| **Low verbosity** | `mirror` * | `oracle` |
+| **Verbose** (high information density) | `explainer` | `contrarian` |
+| **Withholding** (low information density) | `mirror` | `oracle` |
 
-\* Mirror is the control-adjacent baseline for this trial.
+Each agent maps to an approximate Big Five (OCEAN) profile and Myers-Briggs type:
 
-Each agent has a unique `SOUL.md` that encodes its personality and a shared `MEMORY.md` for operational rules.
+| Agent | MBTI | O | C | E | A | N |
+|---|---|---|---|---|---|---|
+| Oracle | INTJ | High | High | Low | Low | Low |
+| Explainer | ENFJ | High | High | High | High | Low |
+| Contrarian | ENTJ | High | Med | High | Low | Low |
+| Mirror | ISFJ | Med | Med | High | High | Low |
 
-### Trial 2 — Operational Configuration (`AGENTS.md`)
+Neuroticism is held low for all agents by design, since high-neuroticism agents may produce erratic behavior that confounds personality-driven effects with instability artifacts.
 
-Varies operational instructions along two axes — **autonomy** (high vs. low) and **memory access** (full vs. none) — while keeping personality and model constant.
+Each agent's `SOUL.md` specifies four structured fields: Core Truths (foundational values), Boundaries (explicit behavioral constraints), Vibe (tone and register), and Continuity (posting cadence and interactivity norms). All four share the same `AGENTS.md`, model (Gemini 2.5 Flash), and `HEARTBEAT.md`.
 
-|  | Full Memory | No Memory |
-|---|---|---|
-| **High autonomy** | `maverick` | `drifter` |
-| **Low autonomy** | `sentinel` | `ghost` |
+### RQ3 — Model Backbone
 
-These agents share the same personality but differ in the `AGENTS.md` rules that govern how freely they act and whether they can read/write persistent memory files.
-
-### Trial 3 — Underlying Model
-
-Uses the control agent's configuration (default `SOUL.md`, no custom memory) across four different LLM backbones to isolate the effect of the model itself.
+Four agents are deployed with identical configurations as the control agent, varying only the underlying LLM. Conditions include `anthropic/claude-4-7-opus`, `anthropic/claude-4-6-sonnet`, `openai/gpt-5-4`, and `alibaba/qwen-3-6plus`.
 
 | Agent | Model |
 |---|---|
@@ -58,9 +60,20 @@ Uses the control agent's configuration (default `SOUL.md`, no custom memory) acr
 
 \* Named `m-gpt4o` because GPT-4o was unavailable on TokenRouter at experiment time; this agent runs GPT-5.4.
 
-### Control Agent
+This design allows for a controlled comparison between two generations of Anthropic models to assess intra-provider scaling effects, as well as a cross-cultural performance analysis between Western-developed frontier models and non-Western counterparts like Qwen. By including both inference-optimized models (e.g., Gemini 2.5 Flash) and large-scale frontier models (e.g., Opus 4.7), we observe how behavioral fidelity to `SOUL.md` scales with parameter density, identifying whether "personality drift" is more prevalent in resource-constrained architectures.
 
-The `control` agent uses the default OpenClaw template `SOUL.md`, Gemini 2.5 Flash, and no custom memory or operational overrides. It serves as the shared baseline across all three trials.
+### RQ4 — Operational Rules, Memory, and Risk Posture (`AGENTS.md`)
+
+Four agents are deployed with identical configurations as the control agent, varying only `AGENTS.md`. The default `AGENTS.md` template was modified at the end by adding condition-specific rules for each agent to follow.
+
+The design incorporates two variables: **autonomy** and **memory persistence**. High-autonomy agents are allowed and encouraged to act on their own discretion, whereas low-autonomy agents are forced to internally verify and confirm their actions against their internal checks and criteria — only after passing accuracy, safety, and validity checks will low-autonomy agents proceed with an action. The memory dimension varies from persistent long-term memory to no memory. Agents with persistent memory record session logs and context between sessions in a memory file. Agents with no memory have these memory files deleted between sessions and are explicitly instructed to treat each session as a brand new session.
+
+|  | Full Memory | No Memory |
+|---|---|---|
+| **High autonomy** | `maverick` | `drifter` |
+| **Low autonomy** | `sentinel` | `ghost` |
+
+All four share the same `SOUL.md`, model (Gemini 2.5 Flash), and `HEARTBEAT.md`.
 
 ## Repository Structure
 
@@ -127,4 +140,3 @@ AI coding assistants (GitHub Copilot) were used during the preparation of this r
 
 - **README content**: AI assisted with formatting the experiment design tables (Trials 1-3) and summarizing the detailed [`TEAM-SETUP.md`](TEAM-SETUP.md) deployment guide into the high-level reproduction steps in the section above.
 - **TEAM-SETUP guide**: AI assisted with formatting and organizing [`TEAM-SETUP.md`](TEAM-SETUP.md) into structured, step-by-step setup instructions.
-- **LaTeX appendix**: AI assisted with drafting and formatting the appendix sections of the accompanying paper, including transcription of agent configuration files into LaTeX.
