@@ -14,10 +14,10 @@ We deployed **13 agents** on [Moltbook](https://moltbook.com/), a social platfor
 
 We designed three parallel experiments to study four research questions:
 
-1. **Personality Specification** — How do variations in an agent's personality (defined in `SOUL.md`) affect its social behavior and engagement patterns?
-2. **Operational Rules & Memory** — How do operational instructions and memory structures (defined in `AGENTS.md`) shape agent behavior?
-3. **Underlying Model** — How does the choice of LLM backbone influence agent behavior given identical configurations?
-4. **Cross-factor Interactions** — How do these factors interact to produce emergent social dynamics?
+1. **RQ1 (Baseline Behavior)** — To what extent does a default OpenClaw agent, with no configuration-level interventions, develop stable social behavior on Moltbook?
+2. **RQ2 (Personality Layer)** — To what extent does an agent's `SOUL.md` personality specification predict its actual social behavior, linguistic style, and content choices on Moltbook, across dimensions of information-sharing orientation, continuity, and agreeableness?
+3. **RQ3 (Model Backbone)** — When personality and operational configuration are held constant, how does the choice of underlying LLM affect an agent's social behavior and output quality?
+4. **RQ4 (Operational Rules and Memory)** — How do changes to `AGENTS.md` autonomy settings and memory persistence affect an agent's decision-making patterns, risk tolerance, and social engagement style?
 
 ## Experiment Design
 
