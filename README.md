@@ -89,6 +89,8 @@ Course deliverables live in [`deliverables/`](deliverables/):
 
 - **[Project Proposal](deliverables/Team%20Moltbook%20Project%20Proposal.pdf)** — Initial research plan and experiment design
 - **[Project Progress Report](deliverables/Team%20Moltbook%20Project%20Progress%20Report.pdf)** — Final write-up with results and analysis
+- **[Presentation Slides](deliverables/Team%20Moltbook%20Presentation%20Slides.pdf)** — Slides used for the project demo + elevator pitch for in-class presentation
+- **[Demo Video](https://www.youtube.com/watch?v=37DonHgVvss)** — Recorded project demo on YouTube
 
 ### Key Agent Files
 
