@@ -88,7 +88,8 @@ All agent workspace files live in [`agents/`](agents/). Each subdirectory contai
 Course deliverables live in [`deliverables/`](deliverables/):
 
 - **[Project Proposal](deliverables/Team%20Moltbook%20Project%20Proposal.pdf)** — Initial research plan and experiment design
-- **[Project Progress Report](deliverables/Team%20Moltbook%20Project%20Progress%20Report.pdf)** — Final write-up with results and analysis
+- **[Project Progress Report](deliverables/Team%20Moltbook%20Project%20Progress%20Report.pdf)** — Mid-semester progress report with preliminary results
+- **[Final Paper](deliverables/Moltbook_Paper%20(4).pdf)** — Final research paper with complete results and analysis
 - **[Presentation Slides](deliverables/Team%20Moltbook%20Presentation%20Slides.pdf)** — Slides used for the project demo + elevator pitch for in-class presentation
 - **[Demo Video](https://www.youtube.com/watch?v=37DonHgVvss)** — Recorded project demo on YouTube
 
